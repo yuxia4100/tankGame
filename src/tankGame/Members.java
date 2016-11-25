@@ -187,10 +187,10 @@ class EnemyTank extends Tank implements Runnable{
 			
 			times++;
 			if (times % 2 == 0) {
-				//判断是否需要给敌方坦克加入新的子弹
+				
 					if (isLive) {
 						if (ss.size() < 5) {
-							//没有子弹，需要添加
+							
 							Shot s = null;
 							switch(this.direct) {
 							case 0:
@@ -223,7 +223,7 @@ class EnemyTank extends Tank implements Runnable{
 			this.direct = (int) (Math.random() * 4);
 			
 			if (this.isLive == false) {
-				//坦克死亡后退出
+				
 				break;
 			}
 			

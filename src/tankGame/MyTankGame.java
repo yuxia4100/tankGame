@@ -36,11 +36,10 @@ public class MyTankGame extends JFrame{
 
 class MyPanel extends JPanel implements KeyListener, Runnable{
 	Hero hero = null;
-	//敌人坦克集合
+	
 	Vector<EnemyTank> ets = new Vector<>();
 	int vectorSize = 3;
 	
-	//炸弹集合
 	Vector<Bomb> bombs = new Vector<>();
 	Image image1 = null;
 	
@@ -94,10 +93,10 @@ class MyPanel extends JPanel implements KeyListener, Runnable{
 		for (int i = 0; i < ets.size(); i++) {
 			EnemyTank et = ets.get(i);
 			if (et.isLive) {
-				//画出敌人坦克
+				
 				this.drawTank(et.getX(), et.getY(), g, et.getDirect(), 0);
 				
-				//画出敌人子弹
+				
 				for (int j = 0; j < et.ss.size(); j++) {
 					Shot enemyShot = et.ss.get(j);
 					if (enemyShot.isLive) {
@@ -124,7 +123,7 @@ class MyPanel extends JPanel implements KeyListener, Runnable{
 		}
 		
 	}
-	// 判断是否击中敌人坦克
+	
 	public void hitHank(Shot s, EnemyTank et) {
 		switch(et.direct) {
 		//Up
