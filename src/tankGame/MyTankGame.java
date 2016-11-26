@@ -1,37 +1,105 @@
 package tankGame;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Panel;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.Vector;
-
+import javax.swing.*;
 import javax.swing.JFrame;
+import javax.swing.JMenuBar;
 import javax.swing.JPanel;
 
-public class MyTankGame extends JFrame{
+public class MyTankGame extends JFrame implements ActionListener{
 	MyPanel mp = null;
+	MyStartPanel msp = null;
+	JMenuBar jmb = null;
+	JMenu jm1 = null;
+	JMenuItem jmi1 = null;
+	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		MyTankGame mtg = new MyTankGame();
-
+		
 	}
 	
 	public MyTankGame() {
-		mp = new MyPanel();
-		Thread t = new Thread(mp);
+//		
+		
+		jmb = new JMenuBar();
+		jm1 = new JMenu("Game(G)");
+		jm1.setMnemonic(KeyEvent.VK_G);
+		
+		jmi1 = new JMenuItem("Start game(S)");
+		jmi1.addActionListener(this);
+		jmi1.setActionCommand("newgame");
+		jm1.add(jmi1);
+		jmb.add(jm1);
+		
+		msp = new MyStartPanel();
+		Thread t = new Thread(msp);
 		t.start();
-		this.add(mp);
-		this.addKeyListener(mp);
-		this.setSize(400, 300);
+		
+		this.setJMenuBar(jmb);
+		this.add(msp);
+		this.setSize(600, 500);
 		this.setVisible(true);
+		
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		// TODO Auto-generated method stub
+		if (e.getActionCommand().equals("newgame")) {
+			mp = new MyPanel();
+			Thread t = new Thread(mp);
+			t.start();
+			this.remove(msp);
+			this.add(mp);
+			this.addKeyListener(mp);
+			this.setVisible(true);
+		}
 		
 	}
 	
 	
+}
+
+class MyStartPanel extends JPanel implements Runnable{
+	int times = 0;
+	
+	public void paint(Graphics g) {
+		super.paint(g);
+		g.fillRect(0, 0, 400, 300);
+		
+		if (times % 2 == 0) {
+			g.setColor(Color.yellow);
+			Font system = new Font("System", Font.BOLD, 30);
+			g.setFont(system);
+			g.drawString("Stage 1", 150, 150);
+		}
+	}
+
+	@Override
+	public void run() {
+		// TODO Auto-generated method stub
+		while(true) {
+			try {
+				Thread.sleep(100);
+			} catch (Exception e) {
+				// TODO: handle exception
+				e.printStackTrace();
+			}
+			times++;
+			this.repaint();
+		}
+	}
 }
 
 class MyPanel extends JPanel implements KeyListener, Runnable{
@@ -186,7 +254,7 @@ class MyPanel extends JPanel implements KeyListener, Runnable{
 			for (int j = 0; j < et.ss.size(); j++) {
 				Shot enemyShot = et.ss.get(j);
 				
-				if (enemyShot.isLive) {
+				if (hero.isLive) {
 					this.hitTank(enemyShot, hero);
 				}
 			}
@@ -256,7 +324,7 @@ class MyPanel extends JPanel implements KeyListener, Runnable{
 	public void keyPressed(KeyEvent e) {
 		// TODO Auto-generated method stub
 		// set hero tank direct
-			
+			if (hero.isLive) {
 				if (e.getKeyCode() == KeyEvent.VK_W) {	
 					this.hero.setDirect(0);
 					this.hero.moveUp();
@@ -276,7 +344,7 @@ class MyPanel extends JPanel implements KeyListener, Runnable{
 						this.hero.shotEnemy();
 					}
 				}
-				
+			}
 				this.repaint();
 	}
 	@Override
