@@ -23,7 +23,8 @@ public class MyTankGame extends JFrame implements ActionListener{
 	JMenu jm1 = null;
 	JMenuItem jmi1 = null;
 	JMenuItem jmi2 = null;
-	
+	JMenuItem jmi3 = null;
+	JMenuItem jmi4 = null;
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		MyTankGame mtg = new MyTankGame();
@@ -37,18 +38,35 @@ public class MyTankGame extends JFrame implements ActionListener{
 		jm1 = new JMenu("Game(G)");
 		jm1.setMnemonic(KeyEvent.VK_G);
 		
-		jmi1 = new JMenuItem("Start game(S)");
-		jmi1.setMnemonic(KeyEvent.VK_S);
+		jmi1 = new JMenuItem("New game(N)");
+		jmi1.setMnemonic(KeyEvent.VK_N);
 		jmi1.addActionListener(this);
 		jmi1.setActionCommand("newgame");
 		jm1.add(jmi1);
 		jmb.add(jm1);
+		
+		jmi4 = new JMenuItem("Continue(C)");
+		jmi4.setMnemonic(KeyEvent.VK_C);
+		jmi4.addActionListener(this);
+		jmi4.setActionCommand("continue");
+		jm1.add(jmi4);
+		
+		jmi3 = new JMenuItem("Save & Exit(S)");
+		jmi3.setMnemonic(KeyEvent.VK_S);
+		jmi3.addActionListener(this);
+		jmi3.setActionCommand("save");
+		jm1.add(jmi3);
 		
 		jmi2 = new JMenuItem("Exit(E)");
 		jmi2.setMnemonic(KeyEvent.VK_E);
 		jmi2.addActionListener(this);
 		jmi2.setActionCommand("exit");
 		jm1.add(jmi2);
+		
+		
+		
+		
+		
 		msp = new MyStartPanel();
 		Thread t = new Thread(msp);
 		t.start();
@@ -64,7 +82,22 @@ public class MyTankGame extends JFrame implements ActionListener{
 	public void actionPerformed(ActionEvent e) {
 		// TODO Auto-generated method stub
 		if (e.getActionCommand().equals("newgame") && mp == null) {
-			mp = new MyPanel();
+			mp = new MyPanel("newGame");
+			Thread t = new Thread(mp);
+			t.start();
+			this.remove(msp);
+			this.add(mp);
+			this.addKeyListener(mp);
+			this.setVisible(true);
+		} else if (e.getActionCommand().equals("exit")) {
+			Recorder.keepRecording();
+			System.exit(0);
+		} else if (e.getActionCommand().equals("save")) {
+			Recorder.setEts(mp.ets);
+			Recorder.keepRecAndEnemy();
+			System.exit(0);
+		} else if (e.getActionCommand().equals("continue")) {
+			mp = new MyPanel("continue");
 			Thread t = new Thread(mp);
 			t.start();
 			this.remove(msp);
@@ -72,12 +105,6 @@ public class MyTankGame extends JFrame implements ActionListener{
 			this.addKeyListener(mp);
 			this.setVisible(true);
 		}
-		
-		if (e.getActionCommand().equals("exit")) {
-			Recorder.keepRecording();
-			System.exit(0);
-		}
-		
 	}
 	
 	
@@ -116,35 +143,52 @@ class MyStartPanel extends JPanel implements Runnable{
 
 class MyPanel extends JPanel implements KeyListener, Runnable{
 	Hero hero = null;
-	
+	//new game or continue
 	Vector<EnemyTank> ets = new Vector<>();
+	Vector<Node> nodes =  new Vector<>();
 	int vectorSize = 3;
 	
 	Vector<Bomb> bombs = new Vector<>();
 	Image image1 = null;
 	
-	public MyPanel() {
-		
+	public MyPanel(String flag) {
+		Recorder.getRecording();
 		hero = new Hero(100, 100);
 		
 		//boom image
 		image1 = Toolkit.getDefaultToolkit().getImage(Panel.class.getResource("/Boom.gif"));
 		
-		
-		for (int i = 0; i < vectorSize; i++) {
-			EnemyTank et = new EnemyTank((i + 1) * 50, 0);
-			et.setColor(0);
-			et.setDirect(2);
-			et.setEts(ets);
-			Thread t = new Thread(et);
-			t.start();
-			Shot s = new Shot(et.x + 10, et.y + 30, 2);
-			et.ss.add(s);
-			Thread t2 = new Thread(s);
-			t2.start();
-			ets.add(et);
+		if (flag.equals("newGame")) {
+			for (int i = 0; i < vectorSize; i++) {
+				EnemyTank et = new EnemyTank((i + 1) * 50, 0);
+				et.setColor(0);
+				et.setDirect(2);
+				et.setEts(ets);
+				Thread t = new Thread(et);
+				t.start();
+				Shot s = new Shot(et.x + 10, et.y + 30, 2);
+				et.ss.add(s);
+				Thread t2 = new Thread(s);
+				t2.start();
+				ets.add(et);
+			}
+		} else if (flag.equals("continue")){
+			nodes = Recorder.getNodes();
+			for (int i = 0; i < nodes.size(); i++) {
+				Node node = nodes.get(i);
+				EnemyTank et = new EnemyTank(node.x, node.y);
+				et.setColor(0);
+				et.setDirect(node.direct);
+				et.setEts(ets);
+				Thread t = new Thread(et);
+				t.start();
+				Shot s = new Shot(et.x + 10, et.y + 30, 2);
+				et.ss.add(s);
+				Thread t2 = new Thread(s);
+				t2.start();
+				ets.add(et);
+			}
 		}
-		
 	}
 	public void paint(Graphics g) {
 		super.paint(g);

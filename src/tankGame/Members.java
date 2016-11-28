@@ -1,15 +1,73 @@
 package tankGame;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.Vector;
 
-class Recorder {
+
+class Node {
+	int x;
+	int y;
+	int direct;
+	
+	public Node(int x, int y, int direct) {
+		this.x = x;
+		this.y = y;
+		this.direct = direct;
+	}
+}
+
+
+ class Recorder {
 	private static int enemyNum = 20;
 	private static int playerNum = 3;
 	private static int totalScore = 0;
 	private static FileWriter fw = null;
 	private static BufferedWriter bw = null;
+	private static FileReader fr = null;
+	private static BufferedReader br = null;
+	private static Vector<EnemyTank> ets = new Vector<>();
+	private static Vector<Node> nodes = new Vector<>();
+	
+	//load node
+	public static Vector<Node> getNodes() {
+		try {
+			fr = new FileReader("c:\\Java\\myRecording.txt");
+			br = new BufferedReader(fr);
+			String n = "";
+			n = br.readLine();
+			totalScore = Integer.parseInt(n);
+			while ((n = br.readLine()) != null) {
+				String[] str = n.split(" ");
+					Node node = new Node(Integer.parseInt(str[0]), Integer.parseInt(str[1]), Integer.parseInt(str[2]));
+					nodes.add(node);
+			}
+			
+//			System.out.println(totalScore);
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+		} finally {
+			try {
+				br.close();
+				fr.close();
+			} catch (Exception e2) {
+				// TODO: handle exception
+				e2.printStackTrace();
+			}
+		}
+		
+		return nodes;
+	}
+	
+	public static Vector<EnemyTank> getEts() {
+		return ets;
+	}
+	public static void setEts(Vector<EnemyTank> ets2) {
+		ets = ets2;
+	}
 	public static int getEnemyNum() {
 		return enemyNum;
 	}
@@ -41,11 +99,23 @@ class Recorder {
 		totalScore++;
 	}
 	
-	public static void keepRecording() {
+	//save destroy enemy tank number &  position & direction of enemy tank
+	public static void keepRecAndEnemy () {
 		try {
-			fw = new FileWriter("c://Java//myRecording.txt");
+			fw = new FileWriter("c:\\Java\\myRecording.txt");
 			bw = new BufferedWriter(fw);
-			bw.write("Your total score is " + totalScore);
+			bw.write(totalScore + "\r\n");
+			
+			//save information of enemy tanks 
+			for (int i = 0; i < ets.size(); i++) {
+				EnemyTank et = ets.get(i);
+				if (et.isLive) {
+					String record = et.x + " " + et.y + " " + et.direct;
+					bw.write(record + "\r\n");
+				}
+			}
+			
+			
 		} catch (Exception e) {
 			// TODO: handle exception
 			e.printStackTrace();
@@ -58,7 +128,47 @@ class Recorder {
 				e2.printStackTrace();
 			}
 		}
-	} 
+	}
+	
+	public static void keepRecording() {
+		try {
+			fw = new FileWriter("c:\\Java\\myRecording.txt");
+			bw = new BufferedWriter(fw);
+			bw.write(totalScore + "\r\n");
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+		} finally {
+			try {
+				bw.close();
+				fw.close();
+			} catch (Exception e2) {
+				// TODO: handle exception
+				e2.printStackTrace();
+			}
+		}
+	}
+	
+	public static void getRecording() {
+		try {
+			fr = new FileReader("c:\\Java\\myRecording.txt");
+			br = new BufferedReader(fr);
+			String num = br.readLine();
+			totalScore = Integer.parseInt(num);
+//			System.out.println(totalScore);
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+		} finally {
+			try {
+				br.close();
+				fr.close();
+			} catch (Exception e2) {
+				// TODO: handle exception
+				e2.printStackTrace();
+			}
+		}
+	}
 }
 
 
