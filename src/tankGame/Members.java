@@ -1,6 +1,67 @@
 package tankGame;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.util.Vector;
+
+class Recorder {
+	private static int enemyNum = 20;
+	private static int playerNum = 3;
+	private static int totalScore = 0;
+	private static FileWriter fw = null;
+	private static BufferedWriter bw = null;
+	public static int getEnemyNum() {
+		return enemyNum;
+	}
+	public static void setEnemyNum(int enemyNum) {
+		Recorder.enemyNum = enemyNum;
+	}
+	public static int getPlayerNum() {
+		return playerNum;
+	}
+	public static void setPlayerNum(int playerNum) {
+		Recorder.playerNum = playerNum;
+	}
+	public static int getTotalScore() {
+		return totalScore;
+	}
+	public static void setTotalScore(int totalScore) {
+		Recorder.totalScore = totalScore;
+	}
+	
+	public static void enemyNumDecrease() {
+		enemyNum--;
+	}
+	
+	public static void playerNumDecrease() {
+		playerNum--;
+	}
+	
+	public static void totalScoreIncrease() {
+		totalScore++;
+	}
+	
+	public static void keepRecording() {
+		try {
+			fw = new FileWriter("c://Java//myRecording.txt");
+			bw = new BufferedWriter(fw);
+			bw.write("Your total score is " + totalScore);
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+		} finally {
+			try {
+				bw.close();
+				fw.close();
+			} catch (Exception e2) {
+				// TODO: handle exception
+				e2.printStackTrace();
+			}
+		}
+	} 
+}
+
+
 
 class Tank {
 	int x = 0;

@@ -22,6 +22,7 @@ public class MyTankGame extends JFrame implements ActionListener{
 	JMenuBar jmb = null;
 	JMenu jm1 = null;
 	JMenuItem jmi1 = null;
+	JMenuItem jmi2 = null;
 	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
@@ -37,11 +38,17 @@ public class MyTankGame extends JFrame implements ActionListener{
 		jm1.setMnemonic(KeyEvent.VK_G);
 		
 		jmi1 = new JMenuItem("Start game(S)");
+		jmi1.setMnemonic(KeyEvent.VK_S);
 		jmi1.addActionListener(this);
 		jmi1.setActionCommand("newgame");
 		jm1.add(jmi1);
 		jmb.add(jm1);
 		
+		jmi2 = new JMenuItem("Exit(E)");
+		jmi2.setMnemonic(KeyEvent.VK_E);
+		jmi2.addActionListener(this);
+		jmi2.setActionCommand("exit");
+		jm1.add(jmi2);
 		msp = new MyStartPanel();
 		Thread t = new Thread(msp);
 		t.start();
@@ -56,7 +63,7 @@ public class MyTankGame extends JFrame implements ActionListener{
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		// TODO Auto-generated method stub
-		if (e.getActionCommand().equals("newgame")) {
+		if (e.getActionCommand().equals("newgame") && mp == null) {
 			mp = new MyPanel();
 			Thread t = new Thread(mp);
 			t.start();
@@ -64,6 +71,11 @@ public class MyTankGame extends JFrame implements ActionListener{
 			this.add(mp);
 			this.addKeyListener(mp);
 			this.setVisible(true);
+		}
+		
+		if (e.getActionCommand().equals("exit")) {
+			Recorder.keepRecording();
+			System.exit(0);
 		}
 		
 	}
@@ -137,6 +149,10 @@ class MyPanel extends JPanel implements KeyListener, Runnable{
 	public void paint(Graphics g) {
 		super.paint(g);
 		g.fillRect(0, 0, 400, 300);
+		
+		//show information
+		this.showInfo(g);
+		
 		//draw user tank
 		if (hero.isLive) {
 			this.drawTank(hero.getX(), hero.getY(), g, this.hero.direct, 1);
@@ -145,6 +161,7 @@ class MyPanel extends JPanel implements KeyListener, Runnable{
 			for (int i = 0; i < hero.ss.size(); i++) {
 				Shot myShot = hero.ss.get(i);
 				if (myShot != null && myShot.isLive) {
+					g.setColor(Color.yellow);
 					g.draw3DRect(myShot.x, myShot.y, 1, 1, false);
 				}
 				
@@ -182,6 +199,7 @@ class MyPanel extends JPanel implements KeyListener, Runnable{
 				for (int j = 0; j < et.ss.size(); j++) {
 					Shot enemyShot = et.ss.get(j);
 					if (enemyShot.isLive) {
+						g.setColor(Color.cyan);
 						g.draw3DRect(enemyShot.x, enemyShot.y, 1, 1, false);
 					} else {
 						et.ss.remove(enemyShot);
@@ -192,6 +210,27 @@ class MyPanel extends JPanel implements KeyListener, Runnable{
 			}
 		}
 		
+		
+		
+	}
+	
+	public void showInfo(Graphics g) {
+		
+		this.drawTank(80, 330, g, 0, 0);
+		g.setColor(Color.black);
+		g.drawString(Recorder.getEnemyNum() + "", 110, 350);
+		this.drawTank(130, 330, g, 0, 1);
+		g.setColor(Color.black);
+		g.drawString(Recorder.getPlayerNum() + "", 160, 350);
+		
+		g.setColor(Color.black);
+		Font t = new Font("System", Font.BOLD, 20);
+		g.setFont(t);
+		g.drawString("Total Score", 420, 30);
+		
+		this.drawTank(420, 60, g, 0, 0);
+		g.setColor(Color.black);
+		g.drawString(Recorder.getTotalScore() + "", 450, 80);
 		
 		
 	}
@@ -209,6 +248,14 @@ class MyPanel extends JPanel implements KeyListener, Runnable{
 				//tank dead
 				t.isLive = false;
 				// create bomb, add to vector
+				if (t instanceof Hero) {
+					Recorder.playerNumDecrease();
+				}
+				
+				if (t instanceof EnemyTank) {
+					Recorder.enemyNumDecrease();
+					Recorder.totalScoreIncrease();
+				}
 				Bomb b = new Bomb(t.x, t.y);
 				bombs.add(b);	
 			}
@@ -223,6 +270,14 @@ class MyPanel extends JPanel implements KeyListener, Runnable{
 				s.isLive = false;
 				//tank dead
 				t.isLive = false;
+				if (t instanceof Hero) {
+					Recorder.playerNumDecrease();
+				}
+				
+				if (t instanceof EnemyTank) {
+					Recorder.enemyNumDecrease();
+					Recorder.totalScoreIncrease();
+				}
 				// create bomb, add to vector
 				Bomb b = new Bomb(t.x, t.y);
 				bombs.add(b);
