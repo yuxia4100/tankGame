@@ -2,9 +2,12 @@ package tankGame;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.Vector;
+
+import javax.sound.sampled.*;
 
 
 class Node {
@@ -17,6 +20,64 @@ class Node {
 		this.y = y;
 		this.direct = direct;
 	}
+}
+
+class AePlayWave extends Thread {
+	private String fileName;
+	
+	public AePlayWave(String wavfile) {
+		fileName = wavfile;
+	}
+	
+	public void run() {
+			File soundFile = new File(fileName);
+			AudioInputStream audioInputStream = null;
+			
+			try {
+				audioInputStream = AudioSystem.getAudioInputStream(soundFile);
+			} catch (Exception e) {
+				// TODO: handle exception
+				e.printStackTrace();
+				return;
+			}
+			
+			AudioFormat format = audioInputStream.getFormat();
+			SourceDataLine sourceLine = null;
+			DataLine.Info info = new DataLine.Info(SourceDataLine.class, format);
+			
+			try {
+				sourceLine = (SourceDataLine) AudioSystem.getLine(info);
+				sourceLine.open(format);
+			} catch (Exception e) {
+				// TODO: handle exception
+				e.printStackTrace();
+				return;
+			}
+			
+			sourceLine.start();
+			int nBytesRead = 0;
+			byte[] abData = new byte[1024];
+			
+			try {
+				while (nBytesRead != -1) {
+					nBytesRead = audioInputStream.read(abData, 0,  abData.length);
+					if (nBytesRead >= 0) {
+		                @SuppressWarnings("unused")
+		                int nBytesWritten = sourceLine.write(abData, 0, nBytesRead);
+		            }
+				}
+			} catch (Exception e) {
+				// TODO: handle exception
+				e.printStackTrace();
+				return;
+			} finally {
+				sourceLine.drain();
+				sourceLine.close();
+			}
+		}
+		
+		
+	
 }
 
 

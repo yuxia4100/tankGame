@@ -189,6 +189,9 @@ class MyPanel extends JPanel implements KeyListener, Runnable{
 				ets.add(et);
 			}
 		}
+		
+		AePlayWave apw = new AePlayWave("c:\\Java\\123.wav");
+		apw.start();
 	}
 	public void paint(Graphics g) {
 		super.paint(g);
