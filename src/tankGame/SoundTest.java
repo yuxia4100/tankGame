@@ -13,7 +13,7 @@ public class SoundTest {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		
-		AeP apw = new AeP("c://123.wav");
+		AeP apw = new AeP("/.wav");
 		apw.start();
 		
 
