@@ -24,12 +24,14 @@ class Node {
 
 class AePlayWave extends Thread {
 	private String fileName;
+	boolean needStop = false;
 	
 	public AePlayWave(String wavfile) {
 		fileName = wavfile;
 	}
 	
 	public void run() {
+		
 			File soundFile = new File(fileName);
 			AudioInputStream audioInputStream = null;
 			
@@ -59,7 +61,7 @@ class AePlayWave extends Thread {
 			byte[] abData = new byte[1024];
 			
 			try {
-				while (nBytesRead != -1) {
+				while (nBytesRead != -1 && !needStop) {
 					nBytesRead = audioInputStream.read(abData, 0,  abData.length);
 					if (nBytesRead >= 0) {
 		                @SuppressWarnings("unused")
@@ -82,7 +84,7 @@ class AePlayWave extends Thread {
 
 
  class Recorder {
-	private static int enemyNum = 20;
+	private static int enemyNum = 10;
 	private static int playerNum = 3;
 	private static int totalScore = 0;
 	private static FileWriter fw = null;

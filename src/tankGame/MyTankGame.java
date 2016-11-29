@@ -16,6 +16,8 @@ import javax.swing.JFrame;
 import javax.swing.JMenuBar;
 import javax.swing.JPanel;
 
+
+
 public class MyTankGame extends JFrame implements ActionListener{
 	MyPanel mp = null;
 	MyStartPanel msp = null;
@@ -25,6 +27,7 @@ public class MyTankGame extends JFrame implements ActionListener{
 	JMenuItem jmi2 = null;
 	JMenuItem jmi3 = null;
 	JMenuItem jmi4 = null;
+	AePlayWave apw = null;
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		MyTankGame mtg = new MyTankGame();
@@ -33,6 +36,8 @@ public class MyTankGame extends JFrame implements ActionListener{
 	
 	public MyTankGame() {
 //		
+		apw = new AePlayWave("src/java_tankgame_bgm.wav");
+		apw.start();
 		
 		jmb = new JMenuBar();
 		jm1 = new JMenu("Game(G)");
@@ -64,12 +69,10 @@ public class MyTankGame extends JFrame implements ActionListener{
 		jm1.add(jmi2);
 		
 		
-		
-		
-		
 		msp = new MyStartPanel();
 		Thread t = new Thread(msp);
 		t.start();
+		
 		
 		this.setJMenuBar(jmb);
 		this.add(msp);
@@ -81,26 +84,49 @@ public class MyTankGame extends JFrame implements ActionListener{
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		// TODO Auto-generated method stub
-		if (e.getActionCommand().equals("newgame") && mp == null) {
-			mp = new MyPanel("newGame");
-			Thread t = new Thread(mp);
-			t.start();
-			this.remove(msp);
-			this.add(mp);
-			this.addKeyListener(mp);
-			this.setVisible(true);
+		if (e.getActionCommand().equals("newgame") ) {
+			apw.needStop = true;
+			AePlayWave apw2 = new AePlayWave("src/java_tankgame_start.wav");
+			apw2.start();
+			if (mp == null) {
+				mp = new MyPanel("newGame");
+				Thread t = new Thread(mp);
+				t.start();
+				this.remove(msp);
+				
+				this.add(mp);
+				this.addKeyListener(mp);
+				this.setVisible(true);
+			
+				
+			} else {
+				mp.needStop = true;
+				this.remove(mp);
+				mp = new MyPanel("newGame");
+				Thread t = new Thread(mp);
+				t.start();
+				this.remove(msp);
+				
+				this.add(mp);
+				this.addKeyListener(mp);
+				this.setVisible(true);
+			}
 		} else if (e.getActionCommand().equals("exit")) {
+			Recorder.setTotalScore(0);
 			Recorder.keepRecording();
 			System.exit(0);
 		} else if (e.getActionCommand().equals("save")) {
 			Recorder.setEts(mp.ets);
 			Recorder.keepRecAndEnemy();
 			System.exit(0);
-		} else if (e.getActionCommand().equals("continue")) {
+		} else if (e.getActionCommand().equals("continue") && mp == null) {
+			apw.stop();
 			mp = new MyPanel("continue");
 			Thread t = new Thread(mp);
 			t.start();
 			this.remove(msp);
+			AePlayWave apw2 = new AePlayWave("src/java_tankgame_start.wav");
+			apw2.start();
 			this.add(mp);
 			this.addKeyListener(mp);
 			this.setVisible(true);
@@ -108,6 +134,17 @@ public class MyTankGame extends JFrame implements ActionListener{
 	}
 	
 	
+}
+
+class MyEndPanel extends JPanel {
+	public void paint(Graphics g) {
+		super.paint(g);
+		g.fillRect(0, 0, 400, 300);
+		g.setColor(Color.yellow);
+		Font system = new Font("System", Font.BOLD, 30);
+		g.setFont(system);
+		g.drawString("You win !!!", 150, 150);
+	}
 }
 
 class MyStartPanel extends JPanel implements Runnable{
@@ -139,19 +176,24 @@ class MyStartPanel extends JPanel implements Runnable{
 			this.repaint();
 		}
 	}
+	
+	
 }
 
 class MyPanel extends JPanel implements KeyListener, Runnable{
+	int times = 0;
 	Hero hero = null;
+	boolean needStop = false;
 	//new game or continue
 	Vector<EnemyTank> ets = new Vector<>();
 	Vector<Node> nodes =  new Vector<>();
 	int vectorSize = 3;
-	
+	int currSize = vectorSize;
 	Vector<Bomb> bombs = new Vector<>();
 	Image image1 = null;
 	
 	public MyPanel(String flag) {
+		
 		Recorder.getRecording();
 		hero = new Hero(100, 100);
 		
@@ -174,6 +216,7 @@ class MyPanel extends JPanel implements KeyListener, Runnable{
 			}
 		} else if (flag.equals("continue")){
 			nodes = Recorder.getNodes();
+			Recorder.setEnemyNum(nodes.size());
 			for (int i = 0; i < nodes.size(); i++) {
 				Node node = nodes.get(i);
 				EnemyTank et = new EnemyTank(node.x, node.y);
@@ -190,76 +233,113 @@ class MyPanel extends JPanel implements KeyListener, Runnable{
 			}
 		}
 		
-		AePlayWave apw = new AePlayWave("c:\\Java\\123.wav");
-		apw.start();
 	}
 	public void paint(Graphics g) {
 		super.paint(g);
-		g.fillRect(0, 0, 400, 300);
 		
-		//show information
-		this.showInfo(g);
-		
-		//draw user tank
-		if (hero.isLive) {
-			this.drawTank(hero.getX(), hero.getY(), g, this.hero.direct, 1);
-			
-			//draw hero shot
-			for (int i = 0; i < hero.ss.size(); i++) {
-				Shot myShot = hero.ss.get(i);
-				if (myShot != null && myShot.isLive) {
-					g.setColor(Color.yellow);
-					g.draw3DRect(myShot.x, myShot.y, 1, 1, false);
-				}
-				
-				if (myShot.isLive == false) {
-					hero.ss.remove(myShot);
-				}
-			}	
-		}
-		
-		//draw bomb
-		for (int i = 0; i < bombs.size(); i++) {
-			Bomb b = bombs.get(i);
-			if (b.life > 0) {
-				g.drawImage(image1, b.x, b.y, 30, 30, this);
+		if (Recorder.getEnemyNum() == 0) {
+			g.fillRect(0, 0, 400, 300);
+			if (times % 2 == 0) {
+				g.setColor(Color.yellow);
+				Font system = new Font("System", Font.BOLD, 30);
+				g.setFont(system);
+				g.drawString("You Win !!!", 120, 150);
 			}
-			
-			b.lifeDecrease();
-			if (b.life == 0) {
-				bombs.remove(b);
+		} else if (Recorder.getPlayerNum() == 0) {
+			g.fillRect(0, 0, 400, 300);
+			if (times % 2 == 0) {
+				g.setColor(Color.yellow);
+				Font system = new Font("System", Font.BOLD, 30);
+				g.setFont(system);
+				g.drawString("Game Over", 120, 150);
 			}
+		}else {
+		
+			g.fillRect(0, 0, 400, 300);
+			//show information
+			this.showInfo(g);
 			
-		}
-		
-		
-		
-		
-		//draw enemy tank
-		for (int i = 0; i < ets.size(); i++) {
-			EnemyTank et = ets.get(i);
-			if (et.isLive) {
+			//draw user tank
+			if (hero.isLive) {
+				this.drawTank(hero.getX(), hero.getY(), g, this.hero.direct, 1);
 				
-				this.drawTank(et.getX(), et.getY(), g, et.getDirect(), 0);
-				
-				
-				for (int j = 0; j < et.ss.size(); j++) {
-					Shot enemyShot = et.ss.get(j);
-					if (enemyShot.isLive) {
-						g.setColor(Color.cyan);
-						g.draw3DRect(enemyShot.x, enemyShot.y, 1, 1, false);
-					} else {
-						et.ss.remove(enemyShot);
+				//draw hero shot
+				for (int i = 0; i < hero.ss.size(); i++) {
+					Shot myShot = hero.ss.get(i);
+					if (myShot != null && myShot.isLive) {
+						g.setColor(Color.yellow);
+						g.draw3DRect(myShot.x, myShot.y, 1, 1, false);
 					}
 					
+					if (myShot.isLive == false) {
+						hero.ss.remove(myShot);
+					}
+				}	
+			}
+			
+			//draw bomb
+			for (int i = 0; i < bombs.size(); i++) {
+				Bomb b = bombs.get(i);
+				if (b.life > 0) {
+					g.drawImage(image1, b.x, b.y, 30, 30, this);
+				}
+				
+				b.lifeDecrease();
+				if (b.life == 0) {
+					bombs.remove(b);
+				}
+				
+			}
+			
+			//spawn enemy tank
+			if (currSize < vectorSize && Recorder.getEnemyNum() >= vectorSize) {
+				EnemyTank et = new EnemyTank(50,50);
+				et.setColor(0);
+				et.setDirect(2);
+				et.setEts(ets);
+				Thread t = new Thread(et);
+				t.start();
+				Shot s = new Shot(et.x + 10, et.y + 30, 2);
+				et.ss.add(s);
+				Thread t2 = new Thread(s);
+				t2.start();
+				ets.add(et);
+				currSize++;
+			}
+			
+			//spawn player tank
+			if (Recorder.getPlayerNum() >= 1 && !hero.isLive) {
+				hero = new Hero(100, 100);
+				this.drawTank(hero.getX(), hero.getY(), g, this.hero.direct, 1);
+			}
+			
+			
+			//draw enemy tank
+			for (int i = 0; i < ets.size(); i++) {
+				EnemyTank et = ets.get(i);
+				if (et.isLive) {
 					
+					this.drawTank(et.getX(), et.getY(), g, et.getDirect(), 0);
+					
+					
+					for (int j = 0; j < et.ss.size(); j++) {
+						Shot enemyShot = et.ss.get(j);
+						if (enemyShot.isLive) {
+							g.setColor(Color.cyan);
+							g.draw3DRect(enemyShot.x, enemyShot.y, 1, 1, false);
+						} else {
+							et.ss.remove(enemyShot);
+						}
+						
+						
+					}
 				}
 			}
 		}
-		
 		
 		
 	}
+	
 	
 	public void showInfo(Graphics g) {
 		
@@ -290,6 +370,8 @@ class MyPanel extends JPanel implements KeyListener, Runnable{
 		case 2:
 			if (s.x > t.x && s.x < t.x + 20 && s.y > t.y && s.y < t.y + 30) {
 				// is hit
+				AePlayWave apw = new AePlayWave("src/java_tankgame_boom.wav");
+				apw.start();
 				//shot dead
 				s.isLive = false;
 				//tank dead
@@ -302,6 +384,7 @@ class MyPanel extends JPanel implements KeyListener, Runnable{
 				if (t instanceof EnemyTank) {
 					Recorder.enemyNumDecrease();
 					Recorder.totalScoreIncrease();
+					currSize--;
 				}
 				Bomb b = new Bomb(t.x, t.y);
 				bombs.add(b);	
@@ -313,6 +396,8 @@ class MyPanel extends JPanel implements KeyListener, Runnable{
 		case 3:
 			if (s.x > t.x && s.x < t.x + 30 && s.y > t.y && s.y < t.y + 20) {
 				//is hit
+				AePlayWave apw = new AePlayWave("src/java_tankgame_boom.wav");
+				apw.start();
 				//shot dead
 				s.isLive = false;
 				//tank dead
@@ -324,6 +409,7 @@ class MyPanel extends JPanel implements KeyListener, Runnable{
 				if (t instanceof EnemyTank) {
 					Recorder.enemyNumDecrease();
 					Recorder.totalScoreIncrease();
+					currSize--;
 				}
 				// create bomb, add to vector
 				Bomb b = new Bomb(t.x, t.y);
@@ -444,6 +530,8 @@ class MyPanel extends JPanel implements KeyListener, Runnable{
 				if (e.getKeyCode() == KeyEvent.VK_J) {
 					if (this.hero.ss.size() < 5) {
 						this.hero.shotEnemy();
+						AePlayWave apw = new AePlayWave("src/java_tankgame_fire.wav");
+						apw.start();
 					}
 				}
 			}
@@ -457,13 +545,13 @@ class MyPanel extends JPanel implements KeyListener, Runnable{
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
-		while (true) {
+		while (!needStop) {
 			try {
 				Thread.sleep(100);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			
+			times++;
 			// Enemy tank is hit ?
 			this.hitEnemy();
 			
@@ -471,9 +559,13 @@ class MyPanel extends JPanel implements KeyListener, Runnable{
 			this.hitHero();
 			
 			this.repaint();
+			
 		}
 		
+		
 	}
+	
+	
 	
 	
 }

@@ -13,7 +13,7 @@ public class SoundTest {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		
-		AeP apw = new AeP("/.wav");
+		AeP apw = new AeP("src/java_tankgame_bgm.wav");
 		apw.start();
 		
 
